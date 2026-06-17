@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Tableau de bord — Opération Sang-Froid | ANDRAGOPS</title>
+<style>
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f4f4f4;color:#222;margin:0;padding:22px}
+h1{color:#C01A1A;margin-bottom:2px}.sub{color:#777;margin-bottom:16px;font-size:14px}
+.k{display:inline-block;background:#fff;border:1px solid #ddd;border-radius:10px;padding:12px 18px;margin:0 8px 12px 0}.k b{font-size:24px;display:block}
+.btn{background:#C01A1A;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:700;cursor:pointer;margin:0 8px 14px 0}
+.btn.alt{background:#1f6f3f}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;margin-top:8px}
+th{background:#C01A1A;color:#fff;padding:9px;text-align:left;font-size:12px}td{padding:8px 9px;border-top:1px solid #eee;font-size:13px}
+.podium td{font-weight:700}
+.medal{font-size:18px}
+h2{color:#222;margin:18px 0 6px;font-size:18px}
+.reco{background:#fff5f5;border:1px solid #C01A1A;border-radius:8px;padding:10px;margin-top:8px}.reco b{color:#C01A1A}
+footer{color:#888;font-size:12px;margin-top:16px}
+</style></head><body>
+<h1>Opération Sang-Froid — Tableau de bord</h1>
+<div class="sub">ANDRAGOPS Académie · classement, statistiques et synthèse entreprise</div>
+<button class="btn" onclick="charger()">↻ Actualiser</button>
+<button class="btn alt" onclick="genWord()">📄 Générer la synthèse Word (entreprise)</button>
+<div id="kpis"></div>
+<h2>🏆 Classement</h2>
+<table><thead><tr><th>#</th><th>Équipe</th><th>Site</th><th>Score</th><th>Bonnes</th><th>Erreurs</th><th>Temps restant</th><th>Date</th></tr></thead><tbody id="rows"><tr><td colspan="8" style="padding:16px">Chargement…</td></tr></tbody></table>
+<h2>Analyse par domaine (priorités de formation)</h2>
+<div id="reco"></div>
+<footer>Page privée ANDRAGOPS — ne pas diffuser. Code d'accès requis.</footer>
+<script>
+var API="https://eumviuptmyzgftrqpape.supabase.co/functions/v1/mission";
+var CODE=localStorage.getItem('cr_code')||"";
+var DATA=[];
+var DOM={err_secours:["Secours","SST (initial + recyclage) et Utilisation du DAE"],err_incendie:["Incendie","Manipulation des extincteurs et Équipier de Première Intervention"],err_tms:["Gestes & postures (TMS)","PRAP IBC et Gestes & Postures"],err_crise:["Gestion de crise","Gestion de Crise & Incivilités"]};
+function $(x){return document.getElementById(x)}
+function esc(s){return String(s==null?"":s).replace(/[&<>]/g,function(c){return c=='&'?'&amp;':c=='<'?'&lt;':'&gt;'})}
+function fmt(s){s=s||0;return Math.floor(s/60)+'m'+(s%60)+'s'}
+function charger(){if(!CODE){var c=prompt("Code d'accès :","");if(!c)return;CODE=c;localStorage.setItem('cr_code',c)}
+fetch(API+"?admin="+encodeURIComponent(CODE)+"&z="+Date.now()).then(function(r){return r.json()}).then(function(rows){
+ if(!Array.isArray(rows)){$('rows').innerHTML="<tr><td colspan=8 style='padding:16px;color:#C01A1A'>Code incorrect. <a href='#' onclick='localStorage.removeItem(\"cr_code\");location.reload()'>réessayer</a></td></tr>";return}
+ DATA=rows.slice().sort(function(a,b){return (b.score||0)-(a.score||0)});
+ var n=DATA.length;var moy=n?Math.round(DATA.reduce(function(s,r){return s+(r.score||0)},0)/n):0;var best=n?DATA[0].score:0;
+ $('kpis').innerHTML="<div class='k'>Parties<b>"+n+"</b></div><div class='k'>Score moyen<b>"+moy+"</b></div><div class='k'>Meilleur score<b>"+best+"</b></div>";
+ var med=["🥇","🥈","🥉"];
+ $('rows').innerHTML=n?DATA.map(function(r,i){return "<tr class='"+(i<3?'podium':'')+"'><td class='medal'>"+(i<3?med[i]:(i+1))+"</td><td>"+esc(r.equipe)+"</td><td>"+esc(r.site)+"</td><td>"+(r.score||0)+"</td><td>"+(r.bonnes||0)+"/"+(r.total||0)+"</td><td>"+(r.erreurs||0)+"</td><td>"+fmt(r.temps_restant)+"</td><td>"+(r.created_at?new Date(r.created_at).toLocaleString('fr-FR'):'')+"</td></tr>"}).join(""):"<tr><td colspan=8 style='padding:16px'>Aucune partie pour le moment.</td></tr>";
+ var tot={err_secours:0,err_incendie:0,err_tms:0,err_crise:0};DATA.forEach(function(r){for(var k in tot)tot[k]+=(r[k]||0)});
+ var ks=Object.keys(tot).sort(function(a,b){return tot[b]-tot[a]});var html="";ks.forEach(function(k){if(tot[k]>0)html+="<div class='reco'><b>"+DOM[k][0]+"</b> — "+tot[k]+" erreur(s) cumulée(s) → formation conseillée : <b>"+DOM[k][1]+"</b></div>"});
+ $('reco').innerHTML = n? (html||"<p style='color:#1f6f3f'>Aucune faiblesse marquée — excellent niveau global. Entretien recommandé (recyclages).</p>") : "<p style='color:#888'>En attente de participations.</p>";
+}).catch(function(){$('rows').innerHTML="<tr><td colspan=8 style='padding:16px;color:#C01A1A'>Erreur réseau.</td></tr>"})}
+function genWord(){
+ if(!DATA.length){alert("Aucune donnée. Cliquez d'abord sur Actualiser.");return}
+ var n=DATA.length;var moy=Math.round(DATA.reduce(function(s,r){return s+(r.score||0)},0)/n);var best=DATA[0];
+ var site=(DATA.find(function(r){return r.site})||{}).site||"—";
+ var tot={err_secours:0,err_incendie:0,err_tms:0,err_crise:0};DATA.forEach(function(r){for(var k in tot)tot[k]+=(r[k]||0)});
+ var ks=Object.keys(tot).sort(function(a,b){return tot[b]-tot[a]});
+ var d=new Date().toLocaleDateString('fr-FR');
+ var rowsTable=DATA.map(function(r,i){return "<tr><td>"+(i+1)+"</td><td>"+esc(r.equipe)+"</td><td>"+esc(r.site||'')+"</td><td>"+(r.score||0)+"</td><td>"+(r.bonnes||0)+"/"+(r.total||0)+"</td><td>"+(r.erreurs||0)+"</td></tr>"}).join("");
+ var recoList=ks.filter(function(k){return tot[k]>0}).map(function(k){return "<li><b>"+DOM[k][0]+"</b> ("+tot[k]+" erreur(s) cumulée(s)) → formation recommandée : <b>"+DOM[k][1]+"</b></li>"}).join("");
+ if(!recoList)recoList="<li>Aucune faiblesse marquée. Recommandation : recyclages d'entretien (SST MAC, exercice incendie annuel).</li>";
+ var html="<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word'><head><meta charset='utf-8'><style>body{font-family:Calibri,Arial;color:#222} h1{color:#C01A1A} h2{color:#C01A1A;border-bottom:2px solid #C01A1A;padding-bottom:3px} table{border-collapse:collapse;width:100%} td,th{border:1px solid #999;padding:6px;font-size:11pt} th{background:#C01A1A;color:#fff}</style></head><body>";
+ html+="<h1>Synthèse Sécurité — Opération Sang-Froid</h1>";
+ html+="<p><b>Entreprise / site :</b> "+esc(site)+"<br><b>Date d'édition :</b> "+d+"<br><b>Réalisé par :</b> ANDRAGOPS Académie — andragops-academie.fr — 07 59 73 82 72</p>";
+ html+="<h2>1. Participation</h2><p>Nombre de parties jouées : <b>"+n+"</b><br>Score moyen : <b>"+moy+" points</b><br>Meilleur score : <b>"+(best.score||0)+" points</b> ("+esc(best.equipe)+")</p>";
+ html+="<h2>2. Classement complet</h2><table><tr><th>#</th><th>Équipe</th><th>Site</th><th>Score</th><th>Bonnes</th><th>Erreurs</th></tr>"+rowsTable+"</table>";
+ html+="<h2>3. Analyse par domaine</h2><p>Répartition des erreurs cumulées par thématique, et formations ANDRAGOPS recommandées en priorité :</p><ul>"+recoList+"</ul>";
+ html+="<h2>4. Recommandation ANDRAGOPS</h2><p>Sur la base de ce diagnostic ludique, nous recommandons un plan de formation ciblé sur les domaines ci-dessus, en présentiel (80% de pratique, méthode C.A.D.R.). Organisme certifié Qualiopi — prise en charge OPCO possible. Déplacement inclus 50 km autour de Strasbourg (Benfeld compris).</p>";
+ html+="<p style='margin-top:18px;color:#888;font-size:10pt'>Document généré automatiquement à partir des résultats du jeu. Bilan indicatif, non certifiant.</p></body></html>";
+ var blob=new Blob(['﻿'+html],{type:'application/msword'});
+ var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download="Synthese_Securite_Operation_Sang-Froid.doc";document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+setInterval(charger,30000);charger();
+</script></body></html>
