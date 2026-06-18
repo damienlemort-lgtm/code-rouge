@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Synthèse Profil Sécurité — ANDRAGOPS</title>
+<style>
+body{font-family:'Segoe UI',Arial,sans-serif;background:#f4f4f4;color:#222;margin:0;padding:22px}
+h1{color:#C01A1A;margin-bottom:2px}.sub{color:#777;margin-bottom:16px;font-size:14px}
+.row{display:flex;flex-wrap:wrap;gap:18px;align-items:flex-start}
+.box{background:#fff;border:1px solid #ddd;border-radius:12px;padding:18px}
+.k{display:inline-block;background:#fff;border:1px solid #ddd;border-radius:10px;padding:12px 16px;margin:0 8px 12px 0}.k b{font-size:22px;display:block}
+.reco{background:#fff5f5;border:1px solid #C01A1A;border-radius:8px;padding:10px;margin-top:8px}.reco b{color:#C01A1A}
+table{width:100%;border-collapse:collapse;background:#fff;border-radius:10px;overflow:hidden;margin-top:14px}
+th{background:#C01A1A;color:#fff;padding:9px;text-align:left;font-size:12px}td{padding:8px 9px;border-top:1px solid #eee;font-size:13px}
+button{background:#C01A1A;color:#fff;border:none;padding:10px 18px;border-radius:8px;font-weight:700;cursor:pointer;margin-bottom:14px}
+footer{color:#888;font-size:12px;margin-top:16px}
+</style></head><body>
+<h1>Synthèse — Profil Sécurité</h1>
+<div class="sub">ANDRAGOPS Académie · radar moyen de l'équipe + priorités de formation</div>
+<button onclick="charger()">↻ Actualiser</button>
+<div id="kpis"></div>
+<div class="row">
+  <div class="box"><h3 style="margin:0 0 6px">Radar moyen</h3><canvas id="rad" width="340" height="340"></canvas></div>
+  <div class="box" style="flex:1;min-width:260px"><h3 style="margin:0 0 6px">Priorités de formation</h3><div id="reco"></div></div>
+</div>
+<table><thead><tr><th>Date</th><th>Équipe</th><th>Site</th><th>SST</th><th>Secours</th><th>Incendie</th><th>TMS</th><th>Vigilance</th><th>Crise</th></tr></thead><tbody id="rows"><tr><td colspan="9" style="padding:16px">Chargement…</td></tr></tbody></table>
+<footer>Page privée ANDRAGOPS — ne pas diffuser.</footer>
+<script>
+var API="https://eumviuptmyzgftrqpape.supabase.co/functions/v1/profil";
+var CODE=localStorage.getItem('cr_code')||"";
+var AXO=["secours","incendie","tms","vigilance","crise"];
+var LAB={secours:"Secours",incendie:"Incendie",tms:"TMS",vigilance:"Vigilance",crise:"Crise"};
+var FULL={secours:"Secours / SST",incendie:"Incendie",tms:"Gestes & TMS",vigilance:"Vigilance",crise:"Gestion de crise"};
+var RECO={secours:"<b>SST</b> (initial + recyclage) et <b>Utilisation du DAE</b>",incendie:"<b>Manipulation des extincteurs</b> et <b>Équipier de Première Intervention</b>",tms:"<b>PRAP IBC</b> et <b>Gestes & Postures</b>",vigilance:"<b>Sensibilisation culture sécurité</b>",crise:"<b>Gestion de Crise & Incivilités</b>"};
+function $(x){return document.getElementById(x)}
+function charger(){if(!CODE){var c=prompt("Code d'accès :","");if(!c)return;CODE=c;localStorage.setItem('cr_code',c)}
+fetch(API+"?admin="+encodeURIComponent(CODE)+"&z="+Date.now()).then(function(r){return r.json()}).then(function(rows){
+ if(!Array.isArray(rows)){$('rows').innerHTML="<tr><td colspan=9 style='padding:16px;color:#C01A1A'>Code incorrect. <a href='#' onclick='localStorage.removeItem(\"cr_code\");location.reload()'>réessayer</a></td></tr>";return}
+ var n=rows.length;var avg={};AXO.forEach(function(a){avg[a]=0});var sumSST=0;rows.forEach(function(r){AXO.forEach(function(a){avg[a]+=(r[a]||0)});sumSST+=(r.nb_sst||0)});AXO.forEach(function(a){avg[a]=n?Math.round(avg[a]/n):0});
+ var kp="<div class='k'>Participations<b>"+n+"</b></div><div class='k'>SST déclarés<b>"+sumSST+"</b></div>";AXO.forEach(function(a){kp+="<div class='k'>"+LAB[a]+"<b>"+avg[a]+"%</b></div>"});$('kpis').innerHTML=kp;
+ radar(avg);
+ var gaps=AXO.filter(function(a){return avg[a]<60}).sort(function(x,y){return avg[x]-avg[y]});
+ $('reco').innerHTML = n? (gaps.length? gaps.map(function(a){return "<div class='reco'><b>"+FULL[a]+" — "+avg[a]+"%</b><br>"+RECO[a]+"</div>"}).join("") : "<div class='reco'>Profil solide sur les 5 axes. Proposer recyclages SST et exercices incendie d'entretien.</div>") : "<p style='color:#888'>Aucune participation pour le moment.</p>";
+ $('rows').innerHTML=rows.length?rows.map(function(r){var d=r.created_at?new Date(r.created_at).toLocaleString('fr-FR'):'';return "<tr><td>"+d+"</td><td><b>"+(r.equipe||'')+"</b></td><td>"+(r.site||'')+"</td><td>"+(r.nb_sst!=null?r.nb_sst:'—')+"</td><td>"+(r.secours||0)+"%</td><td>"+(r.incendie||0)+"%</td><td>"+(r.tms||0)+"%</td><td>"+(r.vigilance||0)+"%</td><td>"+(r.crise||0)+"%</td></tr>"}).join(""):"<tr><td colspan=9 style='padding:16px'>Aucune participation.</td></tr>";
+}).catch(function(){$('rows').innerHTML="<tr><td colspan=9 style='padding:16px;color:#C01A1A'>Erreur réseau.</td></tr>"})}
+function radar(P){var c=$('rad'),x=c.getContext('2d'),cx=170,cy=175,R=120,n=AXO.length;var ang=[];for(var k=0;k<n;k++)ang.push(-Math.PI/2+2*Math.PI*k/n);x.clearRect(0,0,340,340);
+x.strokeStyle='#ccc';for(var g=1;g<=4;g++){x.beginPath();for(var k=0;k<n;k++){var rr=R*g/4,px=cx+rr*Math.cos(ang[k]),py=cy+rr*Math.sin(ang[k]);k?x.lineTo(px,py):x.moveTo(px,py)}x.closePath();x.stroke()}
+x.strokeStyle='#bbb';for(var k=0;k<n;k++){x.beginPath();x.moveTo(cx,cy);x.lineTo(cx+R*Math.cos(ang[k]),cy+R*Math.sin(ang[k]));x.stroke()}
+x.beginPath();for(var k=0;k<n;k++){var rr=R*P[AXO[k]]/100,px=cx+rr*Math.cos(ang[k]),py=cy+rr*Math.sin(ang[k]);k?x.lineTo(px,py):x.moveTo(px,py)}x.closePath();x.fillStyle='rgba(192,26,26,.4)';x.fill();x.strokeStyle='#C01A1A';x.lineWidth=2;x.stroke();
+x.fillStyle='#333';x.font='12px Arial';x.textAlign='center';for(var k=0;k<n;k++){var lx=cx+(R+22)*Math.cos(ang[k]),ly=cy+(R+22)*Math.sin(ang[k])+4;x.fillText(LAB[AXO[k]],lx,ly)}}
+setInterval(charger,30000);charger();
+</script></body></html>
