@@ -18,6 +18,7 @@ footer{color:#888;font-size:12px;margin-top:16px}
 <div class="sub">ANDRAGOPS Académie · classement, statistiques et synthèse entreprise</div>
 <button class="btn" onclick="charger()">↻ Actualiser</button>
 <button class="btn alt" onclick="genWord()">📄 Générer la synthèse Word (entreprise)</button>
+<button class="btn" id="toggleBtn" onclick="toggleGame()" style="background:#555">⏳ État du jeu…</button>
 <div id="kpis"></div>
 <h2>🏆 Classement</h2>
 <table><thead><tr><th>#</th><th>Équipe</th><th>Site</th><th>SST</th><th>Score</th><th>Bonnes</th><th>Erreurs</th><th>Temps restant</th><th>Date</th></tr></thead><tbody id="rows"><tr><td colspan="9" style="padding:16px">Chargement…</td></tr></tbody></table>
@@ -68,5 +69,9 @@ function genWord(){
  var blob=new Blob(['﻿'+html],{type:'application/msword'});
  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download="Synthese_Securite_Operation_Sang-Froid.doc";document.body.appendChild(a);a.click();document.body.removeChild(a);
 }
+function setBtn(open){var b=document.getElementById('toggleBtn');if(!b)return;b.textContent=open?"🟢 Jeu OUVERT — cliquer pour FERMER":"🔴 Jeu FERMÉ — cliquer pour OUVRIR";b.style.background=open?"#1f6f3f":"#C01A1A";b.dataset.open=open?"1":"0";}
+function refreshState(){fetch(API+"?state=1&z="+Date.now()).then(function(r){return r.json()}).then(function(j){setBtn(j&&j.open!==false)}).catch(function(){})}
+function toggleGame(){if(!CODE){var c=prompt("Code d'accès :","");if(!c)return;CODE=c;localStorage.setItem('cr_code',c)}var b=document.getElementById('toggleBtn');var open=b.dataset.open==="1";var set=open?"close":"open";if(!confirm(open?"Fermer le jeu aux participants ?":"Ouvrir le jeu aux participants ?"))return;fetch(API+"?admin="+encodeURIComponent(CODE)+"&set="+set+"&z="+Date.now()).then(function(r){return r.json()}).then(function(j){if(j&&typeof j.open!=='undefined'){setBtn(j.open)}else{alert('Action refusée — vérifie le code d’accès.')}}).catch(function(){alert('Erreur réseau')})}
+refreshState();setInterval(refreshState,30000);
 setInterval(charger,30000);charger();
 </script></body></html>
