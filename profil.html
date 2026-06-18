@@ -39,7 +39,8 @@ canvas{display:block;margin:6px auto}
 <p>21 situations du quotidien. Choisissez ce que vous feriez <b>vraiment</b> — pas de piège ni de mauvaise réponse. À la fin : votre <b>radar sécurité</b> sur 5 axes et un bilan personnalisé.</p>
 <input id="equipe" placeholder="Nom de l'équipe ou service (ex: Atelier assemblage)">
 <input id="site" placeholder="Site (ex: Benfeld) — facultatif">
-<button class="big" onclick="start()">Commencer (≈5 min)</button>
+<input id="nbsst" type="number" min="0" placeholder="Combien de SST déjà formés dans l'équipe ? (ex: 2)">
+<button class="big" onclick="start()">Commencer (≈6 min)</button>
 </div>
 <div id="q" class="card hide"><div class="barwrap"><i id="bar"></i></div><span id="cat" class="cat"></span><p id="scene" class="scene"></p><div id="opts"></div></div>
 <div id="res" class="card hide"></div>
@@ -51,34 +52,34 @@ setTimeout(hideSplash,5200);
 var API="https://eumviuptmyzgftrqpape.supabase.co/functions/v1/profil";
 var CAT={secours:"Secours / SST",incendie:"Incendie",tms:"Gestes & postures",vigilance:"Vigilance",crise:"Gestion de crise"};
 var Q=[
-{ax:"secours",s:"Un collègue se coupe profondément, ça saigne beaucoup. Votre premier réflexe ?",o:[["J'appuie fort sur la plaie et je fais alerter les secours",10],["Je cherche vite quelqu'un qui saura faire",4],["Je lui dis de rincer et d'aller à l'infirmerie",1]]},
-{ax:"secours",s:"Un collègue s'effondre, inconscient. Vous sauriez agir ?",o:[["Oui : je vérifie la respiration, je connais la PLS et le massage",10],["Je sais donner l'alerte, mais pas les gestes",4],["Honnêtement, je serais dépassé",0]]},
-{ax:"secours",s:"Avant de porter secours, le tout premier principe c'est…",o:[["Protéger : supprimer le danger pour éviter le suraccident",10],["Agir vite sur la victime sans regarder autour",3],["Prévenir le chef d'abord",4]]},
-{ax:"secours",s:"Pour un massage cardiaque, le bon rythme est de…",o:[["100 à 120 compressions par minute",10],["60 par minute",2],["Le plus vite possible, sans compter",4]]},
-{ax:"secours",s:"Un produit chimique est projeté dans l'œil d'un collègue. Vous…",o:[["Je rince abondamment à l'eau au plus vite (≈15 min) et j'alerte",10],["Je frotte l'œil et je mets un pansement",0],["J'attends de voir si ça passe",1]]},
-{ax:"secours",s:"Le rôle d'un Sauveteur Secouriste du Travail, c'est surtout…",o:[["Prévenir les risques ET porter secours",10],["Uniquement faire les premiers soins",5],["Remplacer le médecin du travail",2]]},
-{ax:"incendie",s:"Départ de feu sur un coffret électrique. Vous prenez…",o:[["L'extincteur adapté (CO2 pour l'électrique)",10],["Le premier extincteur à portée",5],["Rien, je préfère évacuer directement",3]]},
-{ax:"incendie",s:"L'alarme incendie retentit dans l'atelier. Vous…",o:[["Je connais l'issue et le point de rassemblement, je guide",10],["Je suis le mouvement des autres",5],["Je termine d'abord ce que je fais",0]]},
-{ax:"incendie",s:"Le triangle du feu, c'est…",o:[["Combustible + comburant + énergie d'activation",10],["Feu + eau + air",2],["Je ne sais pas",0]]},
-{ax:"incendie",s:"Pour prévenir un départ de feu en atelier…",o:[["Je range les produits inflammables et ne surcharge pas les prises",10],["Je laisse les cartons près des machines, c'est pratique",1],["Ça ne dépend pas de moi",2]]},
-{ax:"incendie",s:"Un extincteur a son manomètre dans le rouge. Vous…",o:[["Je le signale pour vérification / remplacement",10],["Je le laisse, ça ira",2],["Je le teste pour voir",1]]},
-{ax:"tms",s:"Une charge lourde à soulever depuis le sol. Vous…",o:[["Je plie les jambes, dos droit — ou je prends une aide",10],["Je demande un coup de main",8],["Je force un bon coup, ça ira",2]]},
-{ax:"tms",s:"Poste répétitif : tensions nuque/poignets. Vous…",o:[["J'alterne les postures et je m'étire",10],["Je le signale pour adapter le poste",8],["Je serre les dents, ça passera",2]]},
-{ax:"tms",s:"Le bon réflexe pour préserver son dos au quotidien…",o:[["Rapprocher la charge du corps, dos droit",10],["Soulever vite pour que ça dure moins",2],["Bloquer sa respiration et forcer",1]]},
-{ax:"tms",s:"Travail prolongé sur écran. Pour limiter les TMS…",o:[["Régler le poste (écran à hauteur des yeux) et faire des pauses",10],["Continuer tant qu'il n'y a pas de douleur",3],["Prendre un antidouleur",0]]},
-{ax:"tms",s:"Port de charges répété toute la journée. Meilleure prévention…",o:[["Utiliser une aide à la manutention et alterner les tâches",10],["S'habituer, le corps s'adapte",2],["Tout faire le matin en forme",3]]},
-{ax:"vigilance",s:"Une rallonge traîne en travers d'un passage. Vous…",o:[["Je la range / sécurise tout de suite",10],["Je le signalerai si j'y repense",4],["Je l'enjambe, pas mon rôle",1]]},
-{ax:"vigilance",s:"Un collègue sans EPI dans une zone qui en exige. Vous…",o:[["Je lui dis simplement, avec bienveillance",10],["Je préviens le responsable",6],["Je ne dis rien, ça me gêne",2]]},
-{ax:"crise",s:"Une personne agressive et menaçante à l'accueil. Vous…",o:[["Je garde mon calme, distance de sécurité, je donne l'alerte",10],["Je hausse le ton pour m'imposer",1],["Je l'ignore complètement",3]]},
-{ax:"crise",s:"Accident grave : le premier réflexe collectif…",o:[["Alerter, sécuriser la zone, suivre la consigne / cellule de crise",10],["Chacun gère dans son coin",2],["Filmer pour avoir des preuves",0]]},
-{ax:"crise",s:"Une alerte intrusion / confinement est déclenchée. Vous…",o:[["Je connais la conduite à tenir (se confiner, silence, alerter)",10],["Je sors voir ce qui se passe",0],["J'attends sans savoir quoi faire",2]]}
+{ax:"secours",s:"Hémorragie abondante à l'avant-bras : la compression directe ne suffit pas, le sang traverse les compresses. Le bon geste ?",o:[["Garrot en amont (côté cœur), je note l'heure de pose et je ne le retire plus",10],["J'ajoute des compresses par-dessus sans retirer les premières",4],["Je surélève le bras et j'attends les secours",2]]},
+{ax:"secours",s:"Adulte inconscient qui respire normalement. En attendant les secours, vous…",o:[["Je le mets en PLS et je surveille sa respiration en continu",10],["Je le laisse sur le dos, tête bien calée",3],["Je lui donne un peu d'eau pour le réconforter",0]]},
+{ax:"secours",s:"Adulte en arrêt cardiaque, un DAE est disponible à proximité. Vous…",o:[["RCP 30/2 et je pose le DAE dès qu'il arrive, je suis ses consignes vocales",10],["Massage seul, le DAE c'est réservé aux secours",3],["J'attends les pompiers, je n'ose pas le DAE",1]]},
+{ax:"secours",s:"Le bon rythme et la bonne profondeur des compressions thoraciques ?",o:[["100 à 120/min, environ 5 à 6 cm de profondeur",10],["60/min, peu profond pour ne pas blesser",2],["Le plus vite possible, sans vraiment compter",3]]},
+{ax:"secours",s:"Projection de produit chimique dans l'œil d'un collègue. Vous…",o:[["Je rince abondamment à l'eau au plus vite (≈15 min) et j'alerte",10],["Je frotte l'œil puis je pose un pansement",0],["J'attends de voir si la douleur passe",1]]},
+{ax:"secours",s:"Le rôle exact du Sauveteur Secouriste du Travail dans l'entreprise ?",o:[["Prévenir les risques ET porter secours, dans la chaîne de secours",10],["Faire uniquement les premiers soins",5],["Remplacer l'infirmier ou le médecin du travail",2]]},
+{ax:"incendie",s:"Feu sur une armoire électrique encore sous tension. Quel agent extincteur ?",o:[["CO2 (dioxyde de carbone) — jamais d'eau sur l'électrique sous tension",10],["Eau pulvérisée, c'est plus efficace",0],["N'importe lequel à portée, ça ira",4]]},
+{ax:"incendie",s:"Vous découvrez un début d'incendie. Dans quel ordre agir ?",o:[["Donner l'alarme, attaquer si possible sans risque, puis évacuer",10],["J'attaque le feu d'abord, j'alerte après",4],["J'évacue sans prévenir personne",2]]},
+{ax:"incendie",s:"Un feu de solvant / d'huile (liquide inflammable) est de classe…",o:[["Classe B",10],["Classe A",2],["Classe C",3]]},
+{ax:"incendie",s:"En quittant un local en feu pour limiter la propagation, vous…",o:[["Je ferme les portes derrière moi (sans les verrouiller)",10],["J'ouvre tout pour évacuer la fumée",0],["Je laisse comme c'est et je cours",3]]},
+{ax:"incendie",s:"Fumées denses dans le couloir d'évacuation. Vous…",o:[["Je me baisse (l'air est plus respirable au sol) et je gagne l'issue",10],["Je cours debout le plus vite possible",3],["Je prends l'ascenseur, c'est plus rapide",0]]},
+{ax:"tms",s:"Charge lourde au sol à relever. La bonne technique ?",o:[["Dos droit, jambes fléchies, charge près du corps — ou aide mécanique",10],["Je porte à deux avec un collègue",8],["Je force d'un coup, jambes tendues",1]]},
+{ax:"tms",s:"Tâche répétitive : premières douleurs au poignet et à l'épaule. Vous…",o:[["Je le signale tôt et on adapte le poste / on met en place une rotation",10],["J'alterne les gestes et je m'étire en attendant",7],["Je continue, ça finira par passer",2]]},
+{ax:"tms",s:"Le facteur le plus déterminant dans l'apparition d'un TMS ?",o:[["La combinaison répétitivité + posture contraignante + effort dans la durée",10],["Uniquement le poids de la charge soulevée",4],["Surtout l'âge du salarié",2]]},
+{ax:"tms",s:"Poste sur écran toute la journée. Le réglage prioritaire ?",o:[["Haut de l'écran au niveau des yeux + pauses régulières",10],["Continuer tant qu'il n'y a pas de douleur",3],["Baisser l'écran pour mieux voir le clavier",1]]},
+{ax:"tms",s:"Manutention de cartons répétée chaque jour. La prévention la plus durable ?",o:[["Aide à la manutention + rotation des tâches dans l'équipe",10],["S'habituer, le corps finit par s'endurcir",2],["Tout faire le matin quand on est en forme",3]]},
+{ax:"vigilance",s:"Vous repérez un presque-accident (rallonge en travers d'un passage). Le bon réflexe sécurité ?",o:[["Je sécurise ET je déclare le presque-accident (il évite l'accident de demain)",10],["Je range vite, sans en parler à personne",4],["Je l'enjambe, ce n'est pas mon poste",1]]},
+{ax:"vigilance",s:"Un collègue travaille sans EPI dans une zone qui en exige. Vous…",o:[["Je l'alerte avec bienveillance : la sécurité est l'affaire de tous",10],["Je préviens directement le responsable",6],["Je ne dis rien, ça me gêne",2]]},
+{ax:"crise",s:"Personne agressive et menaçante à l'accueil. Vous…",o:[["Je reste calme, garde une distance de sécurité, temporise et donne l'alerte",10],["Je hausse le ton pour m'imposer",1],["Je l'ignore complètement",3]]},
+{ax:"crise",s:"Accident grave dans l'atelier. Le bon réflexe collectif ?",o:[["Alerter, baliser la zone, appliquer la consigne / activer la cellule de crise",10],["Chacun gère de son côté",2],["Filmer la scène pour avoir des preuves",0]]},
+{ax:"crise",s:"Une alerte intrusion / confinement est déclenchée. Vous…",o:[["Je connais la conduite : me confiner, silence, verrouiller, alerter discrètement",10],["Je sors voir ce qui se passe",0],["J'attends sans savoir quoi faire",2]]}
 ];
 var AXO=["secours","incendie","tms","vigilance","crise"];
 var MAX={};AXO.forEach(function(a){MAX[a]=0});
 Q.forEach(function(q){var m=Math.max.apply(null,q.o.map(function(x){return x[1]}));MAX[q.ax]+=m});
-var sc={};AXO.forEach(function(a){sc[a]=0});var i=0,EQ="",SI="";
+var sc={};AXO.forEach(function(a){sc[a]=0});var i=0,EQ="",SI="",NB=null;
 function $(x){return document.getElementById(x)}
-function start(){EQ=$('equipe').value||'(équipe non nommée)';SI=$('site').value||'';$('intro').className='card hide';$('q').className='card';render()}
+function start(){EQ=$('equipe').value||'(équipe non nommée)';SI=$('site').value||'';NB=parseInt($('nbsst').value,10);if(isNaN(NB))NB=null;$('intro').className='card hide';$('q').className='card';render()}
 function render(){var q=Q[i];$('prog').textContent='Situation '+(i+1)+' / '+Q.length;$('bar').style.width=Math.round(i/Q.length*100)+'%';$('cat').textContent=CAT[q.ax];$('scene').textContent=q.s;var oo=q.o.slice();for(var z=oo.length-1;z>0;z--){var w=Math.floor(Math.random()*(z+1)),tt=oo[z];oo[z]=oo[w];oo[w]=tt;}var bx=$('opts');bx.innerHTML='';oo.forEach(function(op){var b=document.createElement('button');b.className='opt';b.textContent=op[0];b.onclick=function(){sc[q.ax]+=op[1];i++;if(i>=Q.length){fin()}else{render()}};bx.appendChild(b)})}
 function pct(k){return MAX[k]?Math.round(sc[k]/MAX[k]*100):0}
 function fin(){$('q').className='card hide';$('prog').textContent='Terminé';
@@ -98,5 +99,5 @@ x.strokeStyle='#666';for(var k=0;k<n;k++){x.beginPath();x.moveTo(cx,cy);x.lineTo
 x.beginPath();for(var k=0;k<n;k++){var rr=R*P[AXO[k]]/100,px=cx+rr*Math.cos(ang[k]),py=cy+rr*Math.sin(ang[k]);k?x.lineTo(px,py):x.moveTo(px,py)}x.closePath();x.fillStyle='rgba(192,26,26,.45)';x.fill();x.strokeStyle='#C01A1A';x.lineWidth=2;x.stroke();
 var SL={secours:"Secours",incendie:"Incendie",tms:"TMS",vigilance:"Vigilance",crise:"Crise"};x.fillStyle='#ddd';x.font='12px Arial';x.textAlign='center';
 for(var k=0;k<n;k++){var lx=cx+(R+22)*Math.cos(ang[k]),ly=cy+(R+22)*Math.sin(ang[k])+4;x.fillText(SL[AXO[k]],lx,ly)}}
-function send(P){fetch(API,{method:'POST',body:JSON.stringify({equipe:EQ,site:SI,secours:P.secours,incendie:P.incendie,tms:P.tms,vigilance:P.vigilance,crise:P.crise})}).then(function(){$('envoye').textContent='Bilan transmis à l’animateur.'}).catch(function(){$('envoye').textContent='(bilan non transmis — réseau)'})}
+function send(P){fetch(API,{method:'POST',body:JSON.stringify({equipe:EQ,site:SI,nb_sst:NB,secours:P.secours,incendie:P.incendie,tms:P.tms,vigilance:P.vigilance,crise:P.crise})}).then(function(){$('envoye').textContent='Bilan transmis à l’animateur.'}).catch(function(){$('envoye').textContent='(bilan non transmis — réseau)'})}
 </script></body></html>
