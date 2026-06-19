@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
-"""Génère le guide de RENDEZ-VOUS COMMERCIAL ANDRAGOPS x COUSIN GROUP."""
+"""Guide RDV commercial ANDRAGOPS x COUSIN GROUP — offre réelle : SST, MAC SST,
+gestes & postures, PRAP IBC, incendie, cohésion d'entreprise."""
 from docx import Document
 from docx.shared import Pt, RGBColor, Inches
 from docx.enum.text import WD_ALIGN_PARAGRAPH
@@ -14,10 +15,7 @@ VERT = RGBColor(0x1E, 0x6B, 0x3A)
 
 
 def set_base_style(doc):
-    style = doc.styles['Normal']
-    style.font.name = 'Calibri'
-    style.font.size = Pt(11)
-    style.font.color.rgb = GRIS
+    s = doc.styles['Normal']; s.font.name = 'Calibri'; s.font.size = Pt(11); s.font.color.rgb = GRIS
 
 
 def add_cover(doc, title, subtitle, meta_lines):
@@ -39,8 +37,7 @@ def add_cover(doc, title, subtitle, meta_lines):
 def h1(doc, text):
     p = doc.add_paragraph()
     r = p.add_run(text); r.font.size = Pt(16); r.font.bold = True; r.font.color.rgb = BLEU
-    pPr = p._p.get_or_add_pPr(); pbdr = OxmlElement('w:pBdr')
-    bottom = OxmlElement('w:bottom')
+    pPr = p._p.get_or_add_pPr(); pbdr = OxmlElement('w:pBdr'); bottom = OxmlElement('w:bottom')
     for k, v in (('w:val', 'single'), ('w:sz', '6'), ('w:space', '4'), ('w:color', 'B31B1B')):
         bottom.set(qn(k), v)
     pbdr.append(bottom); pPr.append(pbdr)
@@ -74,25 +71,25 @@ def script_line(doc, label, text):
     return p
 
 
-def add_info_table(doc, rows, c0=2.3, c1=4.0):
-    table = doc.add_table(rows=0, cols=2)
+def add_table(doc, header, rows, widths):
+    table = doc.add_table(rows=1, cols=len(header))
     table.style = 'Light Grid Accent 1'; table.alignment = WD_TABLE_ALIGNMENT.LEFT
-    for k, v in rows:
+    for i, htxt in enumerate(header):
+        c = table.rows[0].cells[i]; c.width = Inches(widths[i])
+        rr = c.paragraphs[0].add_run(htxt); rr.font.bold = True; rr.font.size = Pt(10); rr.font.color.rgb = BLEU
+    for row in rows:
         cells = table.add_row().cells
-        cells[0].width = Inches(c0); cells[1].width = Inches(c1)
-        rk = cells[0].paragraphs[0].add_run(k); rk.font.bold = True; rk.font.size = Pt(10.5); rk.font.color.rgb = BLEU
-        rv = cells[1].paragraphs[0].add_run(v); rv.font.size = Pt(10.5)
+        for i, val in enumerate(row):
+            cells[i].width = Inches(widths[i])
+            rr = cells[i].paragraphs[0].add_run(val); rr.font.size = Pt(9.5)
     doc.add_paragraph()
     return table
 
 
 def add_objection(doc, objection, reponse):
-    p = doc.add_paragraph()
-    r = p.add_run('« ' + objection + ' »'); r.font.bold = True; r.font.color.rgb = BLEU
-    p2 = doc.add_paragraph()
-    r2 = p2.add_run('→ Réponse : '); r2.font.bold = True; r2.font.color.rgb = VERT
-    p2.add_run(reponse)
-    p2.paragraph_format.space_after = Pt(10)
+    p = doc.add_paragraph(); r = p.add_run('« ' + objection + ' »'); r.font.bold = True; r.font.color.rgb = BLEU
+    p2 = doc.add_paragraph(); r2 = p2.add_run('→ Réponse : '); r2.font.bold = True; r2.font.color.rgb = VERT
+    p2.add_run(reponse); p2.paragraph_format.space_after = Pt(10)
 
 
 def fill_lines(doc, n=3):
@@ -109,7 +106,7 @@ add_cover(
     "ANDRAGOPS Académie  ✕  COUSIN GROUP",
     [
         "Échange téléphonique avec la Responsable RH",
-        "Objectif : présenter nos formations & identifier les besoins des équipes",
+        "Formations prévention & santé-sécurité au travail + cohésion d'équipe",
         "Angle : sur-mesure & ancrage local (Hauts-de-France)",
         "Contact : +33 (0)6 35 25 89 22 — Wervicq-Sud (59)",
         "",
@@ -117,149 +114,145 @@ add_cover(
     ],
 )
 
-# 1. Objectif & état d'esprit
+# 1. Objectif
 h1(doc, "1. Objectif & état d'esprit du rendez-vous")
-para(doc, "Ce n'est pas un argumentaire « descendant ». C'est un échange de découverte : on présente "
-          "brièvement ANDRAGOPS, puis on fait parler la RH pour cerner les besoins réels des équipes, "
-          "et on co-construit une piste de formation sur-mesure.")
-add_info_table(doc, [
-    ("But de l'appel", "Créer le lien, qualifier les besoins, décrocher un rendez-vous de cadrage"),
-    ("Ce que je vends", "Des formations sur-mesure, ancrées localement, adaptées à leurs équipes"),
-    ("Posture", "Expert-conseil à l'écoute (80 % écoute / 20 % parole), pas de monologue"),
-    ("Résultat visé", "Un prochain RDV (audit des besoins / proposition) + un contact identifié"),
-])
-para(doc, "Règle d'or : la RH doit parler plus que moi. Mon rôle = poser les bonnes questions et "
-          "reformuler leurs besoins en solutions.")
+para(doc, "Échange de découverte : présenter brièvement ANDRAGOPS, faire parler la RH sur leurs enjeux "
+          "sécurité / prévention / cohésion, puis proposer une piste sur-mesure. La sécurité au travail "
+          "est en grande partie une obligation réglementaire : c'est un levier de vente puissant.")
+add_table(doc, ["Élément", "Repère"], [
+    ["But de l'appel", "Qualifier les besoins SST/prévention, décrocher un RDV de cadrage"],
+    ["Ce que je vends", "Formations sécurité obligatoires/recommandées + cohésion, en sur-mesure et local"],
+    ["Posture", "Expert-conseil prévention (80 % écoute / 20 % parole)"],
+    ["Résultat visé", "Un audit de leurs besoins sécurité + une proposition chiffrée"],
+], [2.0, 4.3])
 
-# 2. Le prospect en bref
-h1(doc, "2. Le prospect en 30 secondes (rappel)")
-bullet(doc, "**COUSIN GROUP** — groupe industriel familial de Wervicq-Sud (59), fondé en **1848**.")
-bullet(doc, "3 pôles : **Cousin Trestec** (cordages techniques), **Cousin Composites** (joncs/profilés), "
-            "**Cousin Surgery** (implants médicaux).")
-bullet(doc, "≈ **150 collaborateurs** ; valeurs affichées : **exigence, qualité, innovation** (~5 % du CA en R&D).")
-bullet(doc, "**175 ans de savoir-faire** dans la transformation des fibres → fort enjeu de transmission.")
-bullet(doc, "Recrute des profils de production/encadrement (managers de production, responsables atelier, qualité, IT).")
+# 2. Catalogue ANDRAGOPS
+h1(doc, "2. Votre catalogue ANDRAGOPS (à présenter clairement)")
+add_table(doc, ["Formation", "À quoi ça sert", "Récurrence / cible"], [
+    ["SST — Sauveteur Secouriste du Travail",
+     "Former des salariés à porter secours et à prévenir les risques",
+     "Initiale (~14 h). Cible : ouvriers atelier, encadrants"],
+    ["MAC SST (recyclage)",
+     "Maintien & actualisation des compétences SST",
+     "Obligatoire tous les 24 mois → revenu récurrent"],
+    ["Gestes & postures",
+     "Adopter les bons gestes pour éviter les blessures",
+     "Tout salarié manipulant des charges"],
+    ["PRAP IBC",
+     "Prévention des risques liés à l'activité physique (Industrie/BTP/Commerce)",
+     "Postes physiques, port de charges, TMS"],
+    ["Incendie",
+     "Manipulation extincteurs, évacuation, équipiers 1ʳᵉ intervention",
+     "Tout le site (exercices recommandés ~tous les 6 mois)"],
+    ["Cohésion d'entreprise",
+     "Activités de team building, renforcer le collectif",
+     "Équipes, managers, séminaires"],
+], [1.7, 2.5, 2.1])
+para(doc, "→ Ajustez les durées/tarifs avec vos chiffres réels. Notez vos tarifs indicatifs ci-dessous :")
+fill_lines(doc, 2)
 
-# 3. Lecture des besoins probables -> opportunités de formation
-h1(doc, "3. Besoins probables → pistes de formation (à valider en RDV)")
-para(doc, "Hypothèses à confirmer par les questions de découverte. Ne pas les asséner : les amener "
-          "sous forme de questions.")
+# 3. Pourquoi Cousin a besoin de vous
+h1(doc, "3. Pourquoi le COUSIN GROUP est un prospect idéal")
+para(doc, "Site industriel ~150 personnes (cordages, composites, médical) : manipulation de fibres et "
+          "bobines, machines de tressage/câblage, port de charges, salle blanche côté médical. "
+          "Beaucoup de besoins sécurité concrets et souvent réglementaires.")
+bullet(doc, "**SST** : il faut des secouristes formés dans chaque atelier (recommandation INRS/Assurance Maladie : "
+            "au moins un SST par équipe / zone de travail).")
+bullet(doc, "**MAC SST** : tous leurs SST déjà formés doivent être recyclés tous les 2 ans → besoin récurrent.")
+bullet(doc, "**Gestes & postures / PRAP IBC** : les TMS (troubles musculo-squelettiques) sont la 1ʳᵉ cause "
+            "de maladies professionnelles dans l'industrie → enjeu santé + absentéisme + coût.")
+bullet(doc, "**Incendie** : obligation d'organiser des exercices d'évacuation et de former le personnel à la "
+            "manipulation des extincteurs (Code du travail) ; matières et machines = risque réel.")
+bullet(doc, "**Cohésion** : une maison familiale de 175 ans, en croissance et qui recrute → fédérer "
+            "anciens et nouveaux, renforcer l'esprit d'équipe.")
 
-h2(doc, "A. Transmission du savoir-faire (votre angle fort)")
-bullet(doc, "Enjeu : une maison de 175 ans = des experts métier dont le savoir doit se transmettre.")
-bullet(doc, "Pistes : **formation de formateurs / tuteurs internes**, AFEST (formation en situation de travail), "
-            "ingénierie de transmission, mentorat des nouveaux.")
-
-h2(doc, "B. Management & encadrement de proximité")
-bullet(doc, "Ils recrutent des managers de production / responsables d'atelier.")
-bullet(doc, "Pistes : management d'équipe, communication, gestion des conflits, conduite du changement, "
-            "intégration des nouveaux managers.")
-
-h2(doc, "C. IA & outils numériques (productivité)")
-bullet(doc, "Une entreprise très orientée R&D et innovation → gains possibles au bureau d'études, "
-            "au commercial, à l'administratif.")
-bullet(doc, "Pistes : IA générative au quotidien, outils bureautiques avancés, digitalisation des process.")
-
-h2(doc, "D. Qualité, sécurité & compétences métier")
-bullet(doc, "Milieu industriel exigeant (et salle blanche côté médical).")
-bullet(doc, "Pistes : qualité, sécurité au poste, habilitations, montée en compétences techniques.")
-
-para(doc, "→ Adaptez ces pistes à VOTRE catalogue ANDRAGOPS réel. Notez vos 2-3 offres phares ci-dessous :")
-fill_lines(doc, 3)
-
-# 4. Pitch ANDRAGOPS
+# 4. Pitch
 h1(doc, "4. Pitch ANDRAGOPS (30–60 secondes)")
-para(doc, "Trame à personnaliser avec vos mots :")
-script_line(doc, "Accroche :", "Bonjour, [Prénom Nom], d'ANDRAGOPS Académie. Merci de prendre le temps. "
-            "On accompagne les entreprises industrielles comme la vôtre sur la montée en compétences de leurs équipes.")
-script_line(doc, "Qui :", "ANDRAGOPS, c'est un organisme de formation [Qualiopi le cas échéant], "
-            "spécialisé dans des formations sur-mesure, conçues à partir de vos besoins réels, et de proximité.")
-script_line(doc, "Pourquoi vous :", "J'ai vu que Cousin est une maison de 175 ans, très attachée à la qualité "
-            "et à l'innovation — c'est exactement le type d'entreprise pour qui le sur-mesure fait la différence.")
-script_line(doc, "Transition :", "Avant de vous présenter ce qu'on fait, j'aimerais d'abord comprendre vos "
-            "enjeux RH du moment. Je peux vous poser quelques questions ?")
-para(doc, "Votre version personnalisée :")
-fill_lines(doc, 3)
+script_line(doc, "Accroche :", "Bonjour, [Prénom Nom], d'ANDRAGOPS Académie. Merci de me consacrer "
+            "quelques minutes. On accompagne les entreprises industrielles sur la sécurité et la prévention "
+            "des risques au travail.")
+script_line(doc, "Qui :", "Concrètement, on forme vos équipes au secourisme (SST), aux gestes et postures, "
+            "à la PRAP, à l'incendie — et on propose aussi des activités de cohésion. Le tout en sur-mesure "
+            "et en proximité, ici dans les Hauts-de-France.")
+script_line(doc, "Pourquoi vous :", "Avec un site comme le vôtre, il y a forcément des obligations à tenir "
+            "(secouristes, évacuation, prévention des TMS) — et c'est exactement notre métier.")
+script_line(doc, "Transition :", "Avant de vous en dire plus, j'aimerais comprendre où vous en êtes "
+            "aujourd'hui sur ces sujets. Je peux vous poser quelques questions ?")
+para(doc, "Votre version personnalisée :"); fill_lines(doc, 3)
 
 # 5. Questions de découverte
-h1(doc, "5. Questions de découverte (le cœur de l'appel)")
-para(doc, "Méthode : Situation → Besoins → Impact → Décision. Laissez des silences, notez tout.")
+h1(doc, "5. Questions de découverte (faire parler la RH)")
+h2(doc, "Secourisme / SST")
+bullet(doc, "Combien de Sauveteurs Secouristes du Travail avez-vous aujourd'hui, et dans quels ateliers ?")
+bullet(doc, "Vos SST sont-ils à jour de leur recyclage (MAC tous les 24 mois) ? Qui suit les échéances ?")
+h2(doc, "Risques physiques / TMS")
+bullet(doc, "Avez-vous des postes avec port de charges ou gestes répétitifs ? Des arrêts liés au dos / TMS ?")
+bullet(doc, "Vos équipes ont-elles déjà été formées aux gestes et postures ou à la PRAP ?")
+h2(doc, "Incendie")
+bullet(doc, "Quand a eu lieu votre dernier exercice d'évacuation ? Avez-vous des équipiers de première intervention formés ?")
+bullet(doc, "Votre personnel sait-il manipuler un extincteur ?")
+h2(doc, "Cohésion & contexte RH")
+bullet(doc, "Vous recrutez en ce moment : comment se passe l'intégration et la cohésion des équipes ?")
+bullet(doc, "Comment gérez-vous votre plan de formation sécurité aujourd'hui (interne, prestataires) ?")
+h2(doc, "Décision / budget")
+bullet(doc, "Qui décide des formations sécurité ? Avez-vous un budget mobilisable via votre OPCO cette année ?")
 
-h2(doc, "Situation / contexte")
-bullet(doc, "Comment est organisée la formation chez vous aujourd'hui (interne, externe, plan de développement des compétences) ?")
-bullet(doc, "Quels sont vos principaux enjeux RH cette année (recrutement, fidélisation, montée en compétences) ?")
-bullet(doc, "Sur quels métiers avez-vous le plus de tension ou de turn-over ?")
-
-h2(doc, "Besoins")
-bullet(doc, "Y a-t-il des compétences clés détenues par quelques experts que vous craignez de perdre (départs, retraites) ?")
-bullet(doc, "Comment intégrez-vous et formez-vous vos nouveaux arrivants aujourd'hui ?")
-bullet(doc, "Vos managers de proximité sont-ils accompagnés/formés à l'encadrement ?")
-bullet(doc, "Où aimeriez-vous que vos équipes progressent en priorité dans les 12 prochains mois ?")
-
-h2(doc, "Impact & décision")
-bullet(doc, "Qu'est-ce que ça vous coûterait de ne rien faire sur ce sujet ?")
-bullet(doc, "Qui est impliqué dans le choix d'un organisme de formation ?")
-bullet(doc, "Avez-vous un budget formation déjà engagé via votre OPCO pour cette année ?")
-
-# 6. Arguments différenciants
-h1(doc, "6. Vos arguments différenciants (sur-mesure & local)")
-bullet(doc, "**Sur-mesure** : on ne vend pas un catalogue figé, on construit la formation à partir de VOS process, "
-            "VOTRE vocabulaire métier, VOS cas concrets.")
-bullet(doc, "**Local / proximité** : ancrage Hauts-de-France, intervenants qui se déplacent sur site, réactivité, "
-            "relation humaine durable (en résonance avec leur ADN familial et territorial).")
-bullet(doc, "**Andragogie** : pédagogie pensée pour des adultes en activité — concret, opérationnel, applicable tout de suite.")
-bullet(doc, "**Souplesse** : formats courts, en présentiel sur site, adaptés aux contraintes de production.")
-bullet(doc, "**Financement facilité** : [si Qualiopi] prise en charge possible via l'OPCO et le plan de développement des compétences.")
+# 6. Arguments
+h1(doc, "6. Vos arguments différenciants")
+bullet(doc, "**Obligation = priorité** : la sécurité n'est pas une option, c'est la loi — vous les aidez à être en règle.")
+bullet(doc, "**Sur-mesure** : formations bâties sur LEURS postes réels (atelier de tressage, manutention de bobines, salle blanche).")
+bullet(doc, "**Local & réactif** : intervention sur site à Wervicq-Sud, planning calé sur la production, interlocuteur unique.")
+bullet(doc, "**Approche globale** : un seul partenaire pour SST, gestes & postures, PRAP, incendie ET cohésion.")
+bullet(doc, "**Récurrence maîtrisée** : suivi des recyclages MAC SST → vous ne ratez jamais une échéance.")
+bullet(doc, "**Financement** : [si Qualiopi] prise en charge possible via l'OPCO et le plan de développement des compétences.")
 
 # 7. Objections
 h1(doc, "7. Objections fréquentes & réponses")
-add_objection(doc, "On a déjà notre organisme de formation habituel.",
-              "« Très bien, ce n'est pas pour le remplacer. Justement, sur les besoins très spécifiques à "
-              "vos métiers, le sur-mesure peut compléter ce qui existe. On peut commencer par un sujet précis. »")
-add_objection(doc, "On n'a pas de budget en ce moment.",
-              "« Je comprends. Beaucoup de nos formations sont finançables par votre OPCO via le plan de "
-              "développement des compétences — on peut regarder ensemble ce qui est mobilisable. »")
-add_objection(doc, "On n'a pas le temps, on est en pleine production.",
-              "« C'est exactement pour ça qu'on construit du sur-mesure : formats courts, sur site, calés sur "
-              "vos contraintes d'atelier, sans casser la production. »")
-add_objection(doc, "Envoyez-moi une plaquette, je regarderai.",
-              "« Avec plaisir, je vous l'envoie. Mais une plaquette générique ne dira rien de VOS besoins. "
-              "Accordez-moi 30 minutes pour cadrer un ou deux sujets, et je reviens avec une proposition ciblée. »")
-add_objection(doc, "Pourquoi vous plutôt qu'un gros organisme national ?",
-              "« Parce qu'on est sur-mesure et local : on vient sur site, on parle votre métier, et vous avez "
-              "un interlocuteur unique et réactif, pas un numéro de dossier. »")
+add_objection(doc, "On a déjà un organisme pour la sécurité.",
+              "« Parfait, beaucoup de nos clients en ont un. On intervient souvent en complément, sur ce qui "
+              "manque ou pour les recyclages. On peut commencer par un seul besoin, par exemple le MAC SST. »")
+add_objection(doc, "Nos salariés sont déjà formés.",
+              "« Très bien. Et leurs recyclages sont-ils à jour ? Le SST se recycle tous les 2 ans. Je peux vous "
+              "faire un point gratuit sur vos échéances. »")
+add_objection(doc, "On n'a pas le temps, on est en production.",
+              "« C'est pour ça qu'on vient sur site, en formats courts adaptés à vos horaires d'atelier, "
+              "sans casser la production. »")
+add_objection(doc, "C'est un budget en plus.",
+              "« La plupart de ces formations sont finançables par votre OPCO. Et une formation prévention "
+              "coûte bien moins cher qu'un accident, un arrêt de travail ou un contrôle. »")
+add_objection(doc, "Envoyez-moi une plaquette.",
+              "« Je vous l'envoie. Mais le plus utile serait 30 min pour faire le point sur vos obligations "
+              "réelles, et je reviens avec une proposition ciblée. On se cale un créneau ? »")
 
 # 8. Financement
-h1(doc, "8. Financement (à maîtriser)")
-bullet(doc, "**Qualiopi** : certification qui ouvre les financements publics/mutualisés — mentionnez-la si vous l'avez.")
-bullet(doc, "**OPCO** : Cousin (textile technique / plasturgie / chimie) dépend a priori de l'**OPCO 2i** "
-            "(industrie) — à confirmer ; c'est lui qui peut financer le plan de développement des compétences.")
-bullet(doc, "**Plan de développement des compétences** : le levier principal côté entreprise.")
-bullet(doc, "Objectif : montrer que le frein budgétaire est souvent surmontable.")
+h1(doc, "8. Financement (bon à savoir)")
+bullet(doc, "**Qualiopi** : à mentionner si vous l'avez — c'est ce qui ouvre les financements OPCO.")
+bullet(doc, "**Habilitation INRS** : pour SST/PRAP, valorisez votre habilitation (gage de sérieux) si vous l'avez.")
+bullet(doc, "**OPCO** : Cousin (industrie textile/plasturgie) dépend a priori de l'**OPCO 2i** — à confirmer.")
+bullet(doc, "**Plan de développement des compétences** : le canal de financement côté entreprise.")
 
 # 9. Closing
 h1(doc, "9. Conclure : la prochaine étape")
-para(doc, "Ne jamais raccrocher sans une étape suivante datée.")
-script_line(doc, "Proposition :", "Ce que je vous propose : un rendez-vous de 30–45 min, sur site ou en visio, "
-            "pour cadrer 1 ou 2 sujets prioritaires. Je reviens ensuite avec une proposition sur-mesure et chiffrée.")
-bullet(doc, "Proposez **2 créneaux précis** plutôt qu'un vague « quand vous voulez ».")
-bullet(doc, "Validez : interlocuteur, email, prochain RDV, ce que vous envoyez d'ici là.")
-bullet(doc, "Reformulez les besoins entendus avant de raccrocher (« si j'ai bien compris, vos priorités sont… »).")
+script_line(doc, "Proposition :", "Ce que je vous propose : un point de 30 min, sur site ou en visio, pour "
+            "faire l'état de vos obligations (SST, évacuation, TMS) et vos échéances de recyclage. Je reviens "
+            "avec un plan et un devis sur-mesure.")
+bullet(doc, "Proposez **2 créneaux précis**.")
+bullet(doc, "Validez : interlocuteur, email, prochaine étape, ce que vous envoyez d'ici là.")
+bullet(doc, "Reformulez les besoins entendus avant de raccrocher.")
 
 # 10. Check-list + notes
 h1(doc, "10. Check-list avant l'appel")
 bullet(doc, "Dossier de recherche COUSIN GROUP + ce guide sous les yeux.")
-bullet(doc, "Mes 2-3 offres phares et un exemple de réussite client prêts à citer.")
-bullet(doc, "Mes créneaux de RDV de cadrage disponibles.")
-bullet(doc, "Endroit calme, bon réseau, écouteurs, eau, sourire (s'entend au téléphone).")
-bullet(doc, "De quoi noter : besoins exprimés, budget, décideurs, prochaine étape.")
+bullet(doc, "Mes tarifs/durées par formation + 1 exemple de client industriel satisfait.")
+bullet(doc, "Mes créneaux de RDV disponibles.")
+bullet(doc, "Endroit calme, bon réseau, de quoi noter, sourire (s'entend au téléphone).")
 
 h1(doc, "11. Notes de l'appel")
 para(doc, "Interlocuteur / fonction :"); fill_lines(doc, 1)
-para(doc, "Besoins exprimés :"); fill_lines(doc, 3)
-para(doc, "Budget / OPCO :"); fill_lines(doc, 1)
-para(doc, "Décideurs impliqués :"); fill_lines(doc, 1)
+para(doc, "Nb de SST actuels / échéances recyclage :"); fill_lines(doc, 1)
+para(doc, "Besoins exprimés (gestes/PRAP, incendie, cohésion) :"); fill_lines(doc, 3)
+para(doc, "Budget / OPCO / décideurs :"); fill_lines(doc, 1)
 para(doc, "Prochaine étape & date :"); fill_lines(doc, 2)
 
 doc.save('/home/user/code-rouge/Guide_RDV_Commercial_COUSIN_GROUP.docx')
-print("Guide commercial OK")
+print("Guide commercial (offre réelle) OK")
